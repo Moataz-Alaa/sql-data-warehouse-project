@@ -49,7 +49,7 @@ WITH customer_spending AS (
         DATEDIFF(month, MIN(order_date), MAX(order_date)) AS lifespan
     FROM gold.fact_sales f
     LEFT JOIN gold.dim_customers c
-        ON f.customer_key = c.customer_key
+         ON f.customer_key = c.customer_key
     GROUP BY c.customer_key
 )
 SELECT 
