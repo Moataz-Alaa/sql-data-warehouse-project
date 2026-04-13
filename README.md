@@ -197,7 +197,8 @@ This project was completed following the excellent tutorial series by **Data wit
 
 ### Original Course Resources:
 - 📺 **Course Video**: [SQL Data Warehouse Project Tutorial](https://youtu.be/9GVqKuTVANE)
-- 💻 **Original Repository**: [github.com/DataWithBaraa/sql-data-warehouse-project](https://github.com/DataWithBaraa/sql-data-warehouse-project)
+- 💻 **Original Data Warehouse Repository**: [github.com/DataWithBaraa/sql-data-warehouse-project](https://github.com/DataWithBaraa/sql-data-warehouse-project)
+- 💻 **Original Data Analytics Repository**: [https://github.com/DataWithBaraa/sql-data-analytics-project](https://github.com/DataWithBaraa/sql-data-analytics-project)
 
 > All courses and materials from Data with Baraa are completely free. Support the channel by subscribing, liking, and engaging with the content!
 
