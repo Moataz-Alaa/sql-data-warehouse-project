@@ -47,9 +47,10 @@ SELECT
 FROM gold.fact_sales f
 LEFT JOIN gold.dim_customers c
 	 ON c.customer_key = f.customer_key
-WHERE order_date IS NOT NULL)
+WHERE order_date IS NOT NULL
+)
 
-, customer_aggregation AS (
+, customer_aggregations AS (
 /*---------------------------------------------------------------------------
 2) Customer Aggregations: Summarizes key metrics at the customer level
 ---------------------------------------------------------------------------*/
@@ -75,7 +76,6 @@ SELECT
 	customer_key,
 	customer_number,
 	customer_name,
-	age,
 	CASE 
 		 WHEN age < 20 THEN 'Under 20'
 		 WHEN age between 20 and 29 THEN '20-29'
@@ -83,24 +83,24 @@ SELECT
 		 WHEN age between 40 and 49 THEN '40-49'
 		 ELSE '50 and above'
 	END AS age_group,
+	last_order_date,
+	lifespan,
+	DATEDIFF(month, last_order_date, GETDATE()) AS recency,
 	CASE 
 		WHEN lifespan >= 12 AND total_sales > 5000 THEN 'VIP'
 		WHEN lifespan >= 12 AND total_sales <= 5000 THEN 'Regular'
 		ELSE 'New'
-	END AS customer_segment,
-	last_order_date,
-	DATEDIFF(month, last_order_date, GETDATE()) AS recency,
+	END AS customer_performance,
 	total_orders,
 	total_sales,
 	total_quantity,
-	total_products
-	lifespan,
+	total_products,
 	-- Compuate average order value (AVO)
 	CASE WHEN total_sales = 0 THEN 0
-		 ELSE total_sales / total_orders
+		 ELSE ROUND(CAST(total_sales AS FLOAT) / total_orders, 2)
 	END AS avg_order_value,
 	-- Compuate average monthly spend
 	CASE WHEN lifespan = 0 THEN total_sales
-		 ELSE total_sales / lifespan
+		 ELSE ROUND(CAST(total_sales AS FLOAT) / lifespan, 2)
 	END AS avg_monthly_spend
-FROM customer_aggregation
+FROM customer_aggregations;

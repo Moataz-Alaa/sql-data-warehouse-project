@@ -36,68 +36,69 @@ WITH base_query AS (
 ---------------------------------------------------------------------------*/
 SELECT 
     f.order_number,
-    f.customer_key,
     f.order_date,
+    f.customer_key,
     f.sales_amount,
     f.quantity,
-    f.price,
+    p.product_key,
     p.product_name,
     p.category,
     p.subcategory,
-    p.cost,
-    DATEDIFF(month, p.start_date, GETDATE()) AS lifespan
+    p.cost
 FROM gold.fact_sales f
 LEFT JOIN gold.dim_products p
      ON f.product_key = p.product_key
 WHERE order_date IS NOT NULL
 )
 
-, product_aggregation AS (
+, product_aggregations AS (
 /*---------------------------------------------------------------------------
 2) Product Aggregations: Summarizes key metrics at the product level
 ---------------------------------------------------------------------------*/
 SELECT
-    COUNT(order_number) AS total_orders,
+    product_key,
+    product_name,
+    category,
+    subcategory,
+    cost,
+    DATEDIFF(month, MIN(order_date), MAX(order_date)) AS lifespan,
+    MAX(order_date) AS last_sale_date,
+    COUNT(DISTINCT order_number) AS total_orders,
     COUNT(DISTINCT customer_key) AS total_customers,
-    lifespan,
-    MAX(order_date) AS last_order_date,
     SUM(sales_amount) AS total_sales,
-    SUM(quantity) AS total_quantity,
-    price,
+    SUM(quantity) AS total_quantity
+FROM base_query
+GROUP BY
+    product_key,
     product_name,
     category,
     subcategory,
     cost
-FROM base_query
-GROUP BY
-    price,
-    product_name,
-    category,
-    subcategory,
-    cost,
-    lifespan
 )
 SELECT
+    product_key,
     product_name,
     category,
     subcategory,
     cost,
-    price,
+    last_sale_date,
     lifespan,
-    total_orders,
-    total_customers,
-    total_sales,
-    total_quantity,
+    DATEDIFF(month, last_sale_date, GETDATE()) AS recency,
     CASE WHEN total_sales >= 100000 THEN 'High-Performer'
          WHEN total_sales >= 50000 THEN 'Mid-Range'
-         ELSE 'Low-Performer' END AS performance_segment,
-    DATEDIFF(month, last_order_date, GETDATE()) AS recency,
+         ELSE 'Low-Performer' END AS product_performance,
+    total_orders,
+    total_sales,
+    total_quantity,
+    total_customers,
+    -- Average Order Revenue (AOR)
     CASE 
-         WHEN total_sales = 0 THEN 0
-         ELSE total_orders / total_sales 
+         WHEN total_orders = 0 THEN 0
+         ELSE ROUND(CAST(total_sales AS FLOAT) / total_orders, 2)
     END AS average_order_revenue,
+    -- Average Monthly Revenue
     CASE 
-         WHEN lifespan = 0 THEN 0
-         ELSE total_orders / lifespan
+         WHEN lifespan = 0 THEN total_sales
+         ELSE ROUND(CAST(total_sales AS FLOAT) / lifespan, 2)
     END AS average_monthly_revenue
-FROM product_aggregation;
+FROM product_aggregations;
